@@ -16,7 +16,7 @@ type Polygon struct {
 }
 
 func NewPolygon(points []Point) *Polygon {
-	points = append(points, points[len(points)-1])
+	points = append(points, points[0]) // Add first point
 	return &Polygon{
 		points: points,
 		bb:     GetBoundingBox(points),
