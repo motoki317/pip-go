@@ -4,21 +4,27 @@ Detect if a point (X, Y) is within a given polygon (Set of X, Ys) .
 
 ## Usage
 
-    import pip
+```go
+package main
 
+import "github.com/motoki317/pip-go"
+
+func main() {
     // Polygons are self closing (i.e. you don't need to add first point at end)
-    rectangle := pip.Polygon{
-      Points : []pip.Point {
-        pip.Point{X : 1.0, Y : 1.0},
-        pip.Point{X : 1.0, Y : 2.0},
-        pip.Point{X : 2.0, Y : 2.0},
-        pip.Point{X : 2.0, Y : 1.0},
-      },
-    }
-
+    rectangle := pip.NewPolygon(
+        []pip.Point{
+            pip.Point{X : 1.0, Y : 1.0},
+            pip.Point{X : 1.0, Y : 2.0},
+            pip.Point{X : 2.0, Y : 2.0},
+            pip.Point{X : 2.0, Y : 1.0},
+        },
+    )
+    
     pt1 := pip.Point{X : 1.1,  Y : 1.1}
 
-    pip.PointInPolygon(pt1, rectangle) // Test - Should return true
+    rectangle.Contains(pt1) // Test - Should return true
+}
+```
 
 ## Caveats
 

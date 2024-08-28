@@ -6,14 +6,20 @@ import (
 )
 
 type Point struct {
-	// A point
 	X float64
 	Y float64
 }
 
 type Polygon struct {
-	// A polygon
-	Points []Point
+	points []Point
+	bb     BoundingBox
+}
+
+func NewPolygon(points []Point) *Polygon {
+	return &Polygon{
+		points: points,
+		bb:     GetBoundingBox(points),
+	}
 }
 
 type BoundingBox struct {
@@ -21,36 +27,30 @@ type BoundingBox struct {
 	TopRight   Point
 }
 
-func PointInPolygon(pt Point, poly Polygon) bool {
-	// Checks if point is inside polygon
-
-	bb := GetBoundingBox(poly) // Get the bounding box of the polygon in question
-
+// Contains checks if point is inside polygon
+func (p *Polygon) Contains(pt Point) bool {
 	// If point not in bounding box return false immediately
-	if !PointInBoundingBox(pt, bb) {
+	if !p.bb.Contains(pt) {
 		return false
 	}
 
 	// If the point is in the bounding box then we need to check the polygon
-	nverts := len(poly.Points)
+	nverts := len(p.points)
 	intersect := false
 
-	verts := poly.Points
+	verts := p.points
 	j := 0
 
 	for i := 1; i < nverts; i++ {
-
 		if ((verts[i].Y > pt.Y) != (verts[j].Y > pt.Y)) &&
 			(pt.X < (verts[j].X-verts[i].X)*(pt.Y-verts[i].Y)/(verts[j].Y-verts[i].Y)+verts[i].X) {
 			intersect = !intersect
 		}
 
 		j = i
-
 	}
 
 	return intersect
-
 }
 
 func MaxParallelism() int {
@@ -62,8 +62,7 @@ func MaxParallelism() int {
 	return numCPU
 }
 
-func PointInPolygonParallel(pts []Point, poly Polygon, numcores int) []Point {
-
+func PointInPolygonParallel(pts []Point, poly *Polygon, numcores int) []Point {
 	MAXPROCS := MaxParallelism()
 	runtime.GOMAXPROCS(MAXPROCS)
 
@@ -87,7 +86,7 @@ func PointInPolygonParallel(pts []Point, poly Polygon, numcores int) []Point {
 			defer wg.Done()
 			for j := 0; j < len(batch); j++ {
 				pt := batch[j]
-				if PointInPolygon(pt, poly) {
+				if poly.Contains(pt) {
 					m.Lock()
 					inside = append(inside, pt)
 					m.Unlock()
@@ -102,26 +101,20 @@ func PointInPolygonParallel(pts []Point, poly Polygon, numcores int) []Point {
 	wg.Wait()
 
 	return inside
-
 }
 
-func PointInBoundingBox(pt Point, bb BoundingBox) bool {
-	// Check if point is in bounding box
-
+// Contains checks if point is in bounding box
+func (bb BoundingBox) Contains(pt Point) bool {
 	// Bottom Left is the smallest and x and y value
 	// Top Right is the largest x and y value
 	return pt.X < bb.TopRight.X && pt.X > bb.BottomLeft.X &&
 		pt.Y < bb.TopRight.Y && pt.Y > bb.BottomLeft.Y
-
 }
 
-func GetBoundingBox(poly Polygon) BoundingBox {
-
+func GetBoundingBox(points []Point) BoundingBox {
 	var maxX, maxY, minX, minY float64
 
-	for i := 0; i < len(poly.Points); i++ {
-		side := poly.Points[i]
-
+	for _, side := range points {
 		if side.X > maxX || maxX == 0.0 {
 			maxX = side.X
 		}
@@ -140,5 +133,4 @@ func GetBoundingBox(poly Polygon) BoundingBox {
 		BottomLeft: Point{X: minX, Y: minY},
 		TopRight:   Point{X: maxX, Y: maxY},
 	}
-
 }
