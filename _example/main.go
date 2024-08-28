@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/JamesMilnerUK/pip-go"
+	"github.com/motoki317/pip-go"
 )
 
 var (
@@ -23,10 +23,11 @@ func main() {
 	flag.Parse()
 
 	rand.Seed(time.Now().UnixNano())
-	var polygon pip.Polygon
+	var points []pip.Point
 	for n := 0; n < *npoints; n++ {
-		polygon.Points = append(polygon.Points, pip.Point{rand.Float64() * float64(*width), rand.Float64() * float64(*height)})
+		points = append(points, pip.Point{X: rand.Float64() * float64(*width), Y: rand.Float64() * float64(*height)})
 	}
+	polygon := pip.NewPolygon(points)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		f, err := os.Open("index.html")
@@ -37,7 +38,7 @@ func main() {
 		io.Copy(w, f)
 	})
 	http.HandleFunc("/polygon", func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(&polygon)
+		json.NewEncoder(w).Encode(&points)
 	})
 	http.HandleFunc("/hit", func(w http.ResponseWriter, r *http.Request) {
 		param := r.URL.Query()
@@ -45,7 +46,7 @@ func main() {
 		y, _ := strconv.ParseFloat(param.Get("y"), 64)
 		res := struct {
 			Result bool `json:"result"`
-		}{pip.PointInPolygon(pip.Point{x, y}, polygon)}
+		}{polygon.Contains(pip.Point{X: x, Y: y})}
 		json.NewEncoder(w).Encode(&res)
 	})
 	http.ListenAndServe(":8080", nil)

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>pip-go</title>
-  
+
   <script src="https://code.jquery.com/jquery-2.2.4.min.js" crossorigin="anonymous"></script>
   <script>
 
@@ -27,7 +27,7 @@
       }
       var points;
       $.getJSON("/polygon", function(data) {
-        points = data.Points;
+        points = data
         drawPolygon(points, 'blue');
       });
 
@@ -41,7 +41,7 @@
             drawPolygon(points, 'red');
             setTimeout(function() {
                 drawPolygon(points, 'blue');
-            }, 10);
+            }, 1000);
           }
         });
 
