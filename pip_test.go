@@ -140,37 +140,6 @@ func BenchmarkPipOneMillion(b *testing.B) {
 	}
 }
 
-func BenchmarkPipParallelOneMillion(b *testing.B) {
-	polygon := pip.NewPolygon(
-		[]pip.Point{
-			{X: 0.0, Y: 0.0},
-			{X: 30.0, Y: 50.0},
-			{X: 0.0, Y: 100.0},
-			{X: 50.0, Y: 70.0},
-			{X: 100.0, Y: 100.0},
-			{X: 70.0, Y: 50.0},
-			{X: 100.0, Y: 0.0},
-			{X: 50.0, Y: 30.0},
-		},
-	)
-
-	var x float64
-	var y float64
-	var pts []pip.Point
-
-	for i := 0; i < 1000000; i++ {
-		x = 100.0 * rand.Float64()
-		y = 100.0 * rand.Float64()
-		pts = append(pts, pip.Point{X: x, Y: y})
-	}
-
-	b.ResetTimer()
-	// Actually test the function
-	for n := 0; n < b.N; n++ {
-		pip.PointInPolygonParallel(pts, polygon, 7)
-	}
-}
-
 func assert(a bool, b bool, t *testing.T) bool {
 	test := a == b
 	t.Log("Was the point was correctly identified? " + strconv.FormatBool(test))

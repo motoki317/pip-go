@@ -1,10 +1,5 @@
 package pip
 
-import (
-	"runtime"
-	"sync"
-)
-
 type Point struct {
 	X float64
 	Y float64
@@ -52,56 +47,6 @@ func (p *Polygon) Contains(pt Point) bool {
 	}
 
 	return intersect
-}
-
-func MaxParallelism() int {
-	maxProcs := runtime.GOMAXPROCS(0)
-	numCPU := runtime.NumCPU()
-	if maxProcs < numCPU {
-		return maxProcs
-	}
-	return numCPU
-}
-
-func PointInPolygonParallel(pts []Point, poly *Polygon, numcores int) []Point {
-	MAXPROCS := MaxParallelism()
-	runtime.GOMAXPROCS(MAXPROCS)
-
-	if numcores > MAXPROCS {
-		numcores = MAXPROCS
-	}
-
-	start := 0
-	inside := []Point{}
-
-	var m sync.Mutex
-	var wg sync.WaitGroup
-	wg.Add(numcores)
-
-	for i := 1; i <= numcores; i++ {
-
-		size := (len(pts) / numcores) * i
-		batch := pts[start:size]
-
-		go func(batch []Point) {
-			defer wg.Done()
-			for j := 0; j < len(batch); j++ {
-				pt := batch[j]
-				if poly.Contains(pt) {
-					m.Lock()
-					inside = append(inside, pt)
-					m.Unlock()
-				}
-			}
-
-		}(batch)
-
-		start = size
-	}
-
-	wg.Wait()
-
-	return inside
 }
 
 // Contains checks if point is in bounding box
